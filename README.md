@@ -47,6 +47,9 @@ You must not rely on creation order.
 You can set up non-Acorn fields if you wish, but under no circumstances should you try accessing the registry
 for any other Acorn.
 
+You must also avoid doing anything that has side effects, or you'll lose a very convenient approach to mocking
+(the constructor gets called before the mocks can be inserted in tests).
+
 ### 2. assembly
 
 Now that all the Acorns have been instantiated, it's time to wire up the references between them.
@@ -111,7 +114,9 @@ Call `registry.Register(mypackage.New)` with a reference to your constructor.
 I find it useful to collect all these calls in a top level application class.
 
 _Note: since you are registering the Acorn constructors yourself, you can change the constructor that you
-are registering. This allows very easy switching to mocks for tests._
+are registering. This allows very easy switching to mocks for tests. You can even overwrite already
+registered constructors by providing an implementation with the same return value of `AcornName()`,
+because the registry remembers registration order, and the last one wins._
 
 ### Library Authors
 
