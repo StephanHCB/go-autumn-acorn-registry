@@ -1,4 +1,4 @@
-package goauacornapi
+package auacornapi
 
 // Registry is the singleton instance of AcornRegistry provided by this library.
 //

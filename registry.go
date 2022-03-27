@@ -1,9 +1,9 @@
-package goauacorn
+package auacorn
 
 import (
 	"errors"
 	"fmt"
-	goauacornapi "github.com/StephanHCB/go-autumn-acorn-registry/api"
+	auacornapi "github.com/StephanHCB/go-autumn-acorn-registry/api"
 )
 
 const (
@@ -17,25 +17,25 @@ const (
 )
 
 type AcornRegistryImpl struct {
-	constructors    []goauacornapi.Constructor
-	instancesByName map[string]goauacornapi.Acorn
+	constructors    []auacornapi.Constructor
+	instancesByName map[string]auacornapi.Acorn
 	phase           uint8
-	phaseByInstance map[goauacornapi.Acorn]uint8
+	phaseByInstance map[auacornapi.Acorn]uint8
 }
 
 func init() {
-	goauacornapi.Registry = New()
+	auacornapi.Registry = New()
 }
 
-func New() goauacornapi.AcornRegistry {
+func New() auacornapi.AcornRegistry {
 	return &AcornRegistryImpl{
-		constructors:    make([]goauacornapi.Constructor, 0),
-		instancesByName: make(map[string]goauacornapi.Acorn),
-		phaseByInstance: make(map[goauacornapi.Acorn]uint8),
+		constructors:    make([]auacornapi.Constructor, 0),
+		instancesByName: make(map[string]auacornapi.Acorn),
+		phaseByInstance: make(map[auacornapi.Acorn]uint8),
 	}
 }
 
-func (a *AcornRegistryImpl) Register(constructor goauacornapi.Constructor) {
+func (a *AcornRegistryImpl) Register(constructor auacornapi.Constructor) {
 	a.constructors = append(a.constructors, constructor)
 }
 
@@ -49,7 +49,7 @@ func (a *AcornRegistryImpl) Create() {
 	a.phase = phaseCreateDone
 }
 
-func (a *AcornRegistryImpl) lifecycleStep(step string, fromPhase uint8, toPhase uint8, receiver func(goauacornapi.Acorn) error) error {
+func (a *AcornRegistryImpl) lifecycleStep(step string, fromPhase uint8, toPhase uint8, receiver func(auacornapi.Acorn) error) error {
 	for name, instance := range a.instancesByName {
 		if a.phaseByInstance[instance] == fromPhase {
 			// only do the phase if it hasn't already been done
@@ -68,7 +68,7 @@ func (a *AcornRegistryImpl) Assemble() error {
 	if a.phase != 1 {
 		return errors.New("wrong acorn registry phase order: Assemble() comes after Create()")
 	}
-	return a.lifecycleStep("assembly", phaseCreateDone, phaseAssembleDone, func(instance goauacornapi.Acorn) error {
+	return a.lifecycleStep("assembly", phaseCreateDone, phaseAssembleDone, func(instance auacornapi.Acorn) error {
 		return instance.AssembleAcorn(a)
 	})
 }
@@ -77,23 +77,23 @@ func (a *AcornRegistryImpl) Setup() error {
 	if a.phase != 2 {
 		return errors.New("wrong acorn registry phase order: Setup() comes after Assemble()")
 	}
-	return a.lifecycleStep("setup", phaseAssembleDone, phaseSetupDone, func(instance goauacornapi.Acorn) error {
+	return a.lifecycleStep("setup", phaseAssembleDone, phaseSetupDone, func(instance auacornapi.Acorn) error {
 		return instance.SetupAcorn(a)
 	})
 }
 
 func (a *AcornRegistryImpl) Teardown() error {
 	// we allow teardown even for lower phase numbers, so partial setup can be cleaned up
-	return a.lifecycleStep("teardown", phaseSetupDone, phaseTeardownDone, func(instance goauacornapi.Acorn) error {
+	return a.lifecycleStep("teardown", phaseSetupDone, phaseTeardownDone, func(instance auacornapi.Acorn) error {
 		return instance.TeardownAcorn(a)
 	})
 }
 
-func (a *AcornRegistryImpl) GetAcornByName(acornName string) goauacornapi.Acorn {
+func (a *AcornRegistryImpl) GetAcornByName(acornName string) auacornapi.Acorn {
 	return a.instancesByName[acornName]
 }
 
-func (a *AcornRegistryImpl) SetupAfter(otherAcorn goauacornapi.Acorn) error {
+func (a *AcornRegistryImpl) SetupAfter(otherAcorn auacornapi.Acorn) error {
 	if a.phase != 2 {
 		return errors.New("wrong acorn registry phase for call to SetupAfter() - only allowed during setup phase")
 	}
@@ -112,7 +112,7 @@ func (a *AcornRegistryImpl) SetupAfter(otherAcorn goauacornapi.Acorn) error {
 	return err
 }
 
-func (a *AcornRegistryImpl) TeardownAfter(otherAcorn goauacornapi.Acorn) error {
+func (a *AcornRegistryImpl) TeardownAfter(otherAcorn auacornapi.Acorn) error {
 	if a.phaseByInstance[otherAcorn] == phaseInRecursiveTeardown {
 		// circular dependency
 		return fmt.Errorf("circular teardown dependency involving Acorn %s - not allowed", otherAcorn.AcornName())
