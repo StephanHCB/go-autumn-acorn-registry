@@ -49,6 +49,16 @@ func (a *AcornRegistryImpl) Create() {
 	a.phase = phaseCreateDone
 }
 
+// CreateOverride lets you override an instance after create.
+//
+// MUST use before Assemble()
+//
+// useful for testing
+func (a *AcornRegistryImpl) CreateOverride(name string, instance auacornapi.Acorn) {
+	a.instancesByName[name] = instance
+	a.phaseByInstance[instance] = phaseCreateDone
+}
+
 func (a *AcornRegistryImpl) lifecycleStep(step string, fromPhase uint8, toPhase uint8, receiver func(auacornapi.Acorn) error) error {
 	for name, instance := range a.instancesByName {
 		if a.phaseByInstance[instance] == fromPhase {
@@ -64,6 +74,13 @@ func (a *AcornRegistryImpl) lifecycleStep(step string, fromPhase uint8, toPhase 
 	return nil
 }
 
+// SkipAssemble lets you mark an instance as already assembled, so it will be skipped during Assemble().
+//
+// useful for testing
+func (a *AcornRegistryImpl) SkipAssemble(instance auacornapi.Acorn) {
+	a.phaseByInstance[instance] = phaseAssembleDone
+}
+
 func (a *AcornRegistryImpl) Assemble() error {
 	if a.phase != 1 {
 		return errors.New("wrong acorn registry phase order: Assemble() comes after Create()")
@@ -73,6 +90,13 @@ func (a *AcornRegistryImpl) Assemble() error {
 	})
 }
 
+// SkipSetup lets you mark an instance as already set up, so it will be skipped during Setup().
+//
+// useful for testing
+func (a *AcornRegistryImpl) SkipSetup(instance auacornapi.Acorn) {
+	a.phaseByInstance[instance] = phaseSetupDone
+}
+
 func (a *AcornRegistryImpl) Setup() error {
 	if a.phase != 2 {
 		return errors.New("wrong acorn registry phase order: Setup() comes after Assemble()")
@@ -80,6 +104,13 @@ func (a *AcornRegistryImpl) Setup() error {
 	return a.lifecycleStep("setup", phaseAssembleDone, phaseSetupDone, func(instance auacornapi.Acorn) error {
 		return instance.SetupAcorn(a)
 	})
+}
+
+// SkipTeardown lets you mark an instance as already torn down, so it will be skipped during Teardown().
+//
+// useful for testing
+func (a *AcornRegistryImpl) SkipTeardown(instance auacornapi.Acorn) {
+	a.phaseByInstance[instance] = phaseTeardownDone
 }
 
 func (a *AcornRegistryImpl) Teardown() error {

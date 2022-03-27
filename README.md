@@ -118,6 +118,34 @@ are registering. This allows very easy switching to mocks for tests. You can eve
 registered constructors by providing an implementation with the same return value of `AcornName()`,
 because the registry remembers registration order, and the last one wins._
 
+### Testing
+
+During test scenarios, you have several methods that you can call between the major lifecycle phases
+
+#### Before Create()
+
+You can register extra testing-only Acorns, which may later do things like populate caches, etc.
+
+#### Between Create() and Assemble()
+
+`CreateOverride(name string, instance Acorn)` lets you replace an instance before it is wired into
+all the other instances during Assemble(). You need to take care to implement the same interfaces as the
+original Acorn, and you'll need to provide the correct name.
+
+`SkipAssemble(instance Acorn)` lets you mark an Acorn as already assembled, so it will be skipped.
+Of course this means you're not getting a call to your AssembleAcorn() method, so you'll need to do
+any reference wiring yourself. Since your implementation is likely a mock anyway, this may be exactly what you want.
+
+#### Between Assemble() and Setup()
+
+`SkipSetup(instance Acorn)` lets you mark an Acorn as already set up, so it will be skipped.
+This works even when another acorn requests your Acorn to be set up first, the logic just thinks
+it's already set up and does nothing.
+
+#### Before Teardown()
+
+`SkipTeardown(instance Acorn)` lets you mark an Acorn as already torn down.
+
 ### Library Authors
 
 Implement the `Acorn` interface for any class that an application author might wish to directly wire up as

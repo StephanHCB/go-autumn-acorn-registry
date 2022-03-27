@@ -78,6 +78,30 @@ type AcornRegistry interface {
 	//
 	// It is an error to create a circular dependency. The registry will detect this.
 	TeardownAfter(otherAcorn Acorn) error
+
+	// --- methods useful for testing ---
+
+	// CreateOverride lets you override an instance after create.
+	//
+	// MUST use before Assemble()
+	//
+	// useful for testing
+	CreateOverride(name string, instance Acorn)
+
+	// SkipAssemble lets you mark an instance as already assembled, so it will be skipped during Assemble().
+	//
+	// useful for testing
+	SkipAssemble(instance Acorn)
+
+	// SkipSetup lets you mark an instance as already set up, so it will be skipped during Setup().
+	//
+	// useful for testing
+	SkipSetup(instance Acorn)
+
+	// SkipTeardown lets you mark an instance as already torn down, so it will be skipped during Teardown().
+	//
+	// useful for testing
+	SkipTeardown(instance Acorn)
 }
 
 type Acorn interface {
