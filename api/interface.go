@@ -1,10 +1,5 @@
 package auacornapi
 
-// Registry is the singleton instance of AcornRegistry provided by this library.
-//
-// Note: you can create your own instances, but normally you should not need to.
-var Registry AcornRegistry
-
 type Constructor func() Acorn
 
 type AcornRegistry interface {

@@ -23,8 +23,13 @@ type AcornRegistryImpl struct {
 	phaseByInstance map[auacornapi.Acorn]uint8
 }
 
+// Registry is the singleton instance of AcornRegistry provided by this library.
+//
+// Note: you can create your own instances, but normally you should not need to.
+var Registry auacornapi.AcornRegistry
+
 func init() {
-	auacornapi.Registry = New()
+	Registry = New()
 }
 
 func New() auacornapi.AcornRegistry {
