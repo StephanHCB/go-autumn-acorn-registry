@@ -74,6 +74,18 @@ type AcornRegistry interface {
 	// It is an error to create a circular dependency. The registry will detect this.
 	TeardownAfter(otherAcorn Acorn) error
 
+	// AddSetupOrderRule allows you to add extra setup dependencies.
+	//
+	// Effectively this is just like adding SetupAfter(prerequisite) to the dependency's Setup() method.
+	//
+	// This is useful if you are using an Acorn from a library, and it is therefore hard to add the SetupAfter() call.
+	// With this, you can add the dependency from the other side.
+	//
+	// Should ONLY be used during the assembly phase, typically at the end of AssembleAcorn() of the prerequisite Acorn.
+	//
+	// It is an error to create a circular dependency. The registry will detect this.
+	AddSetupOrderRule(prerequisite Acorn, dependency Acorn) error
+
 	// --- methods useful for testing ---
 
 	// CreateOverride lets you override an instance after create.

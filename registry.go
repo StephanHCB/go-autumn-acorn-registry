@@ -7,12 +7,12 @@ import (
 )
 
 const (
-	phaseCreateDone = 1
+	phaseCreateDone   = 1
 	phaseAssembleDone = 2
-	phaseSetupDone = 3
+	phaseSetupDone    = 3
 	phaseTeardownDone = 4
 
-	phaseInRecursiveSetup = 93 // special phase value so we can detect circular setup dependencies
+	phaseInRecursiveSetup    = 93 // special phase value so we can detect circular setup dependencies
 	phaseInRecursiveTeardown = 94 // special phase value so we can detect circular teardown dependencies
 )
 
@@ -21,6 +21,7 @@ type AcornRegistryImpl struct {
 	instancesByName map[string]auacornapi.Acorn
 	phase           uint8
 	phaseByInstance map[auacornapi.Acorn]uint8
+	setupBefore     map[auacornapi.Acorn][]auacornapi.Acorn // dependency -> prerequisites
 }
 
 // Registry is the singleton instance of AcornRegistry provided by this library.
@@ -37,6 +38,7 @@ func New() auacornapi.AcornRegistry {
 		constructors:    make([]auacornapi.Constructor, 0),
 		instancesByName: make(map[string]auacornapi.Acorn),
 		phaseByInstance: make(map[auacornapi.Acorn]uint8),
+		setupBefore:     make(map[auacornapi.Acorn][]auacornapi.Acorn),
 	}
 }
 
@@ -102,12 +104,25 @@ func (a *AcornRegistryImpl) SkipSetup(instance auacornapi.Acorn) {
 	a.phaseByInstance[instance] = phaseSetupDone
 }
 
+func (a *AcornRegistryImpl) injectExtraSetupAfterCallsThenSetup(instance auacornapi.Acorn) error {
+	extraPrerequisites, ok := a.setupBefore[instance]
+	if ok {
+		for _, prerequisite := range extraPrerequisites {
+			err := a.SetupAfter(prerequisite)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return instance.SetupAcorn(a)
+}
+
 func (a *AcornRegistryImpl) Setup() error {
 	if a.phase != 2 {
 		return errors.New("wrong acorn registry phase order: Setup() comes after Assemble()")
 	}
 	return a.lifecycleStep("setup", phaseAssembleDone, phaseSetupDone, func(instance auacornapi.Acorn) error {
-		return instance.SetupAcorn(a)
+		return a.injectExtraSetupAfterCallsThenSetup(instance)
 	})
 }
 
@@ -143,7 +158,7 @@ func (a *AcornRegistryImpl) SetupAfter(otherAcorn auacornapi.Acorn) error {
 	}
 
 	a.phaseByInstance[otherAcorn] = phaseInRecursiveSetup
-	err := otherAcorn.SetupAcorn(a)
+	err := a.injectExtraSetupAfterCallsThenSetup(otherAcorn)
 	a.phaseByInstance[otherAcorn] = phaseSetupDone
 	return err
 }
@@ -162,4 +177,21 @@ func (a *AcornRegistryImpl) TeardownAfter(otherAcorn auacornapi.Acorn) error {
 	err := otherAcorn.TeardownAcorn(a)
 	a.phaseByInstance[otherAcorn] = phaseTeardownDone
 	return err
+}
+
+func (a *AcornRegistryImpl) AddSetupOrderRule(prerequisite auacornapi.Acorn, dependency auacornapi.Acorn) error {
+	if a.phase != 1 {
+		return errors.New("wrong acorn registry phase order: AddSetupOrderRule() should be called during assembly phase")
+	}
+	if prerequisite == nil || dependency == nil {
+		return errors.New("cannot add setup order rule for nil acorns")
+	}
+
+	currentSetupBefore, ok := a.setupBefore[dependency]
+	if !ok {
+		currentSetupBefore = make([]auacornapi.Acorn, 0)
+	}
+
+	a.setupBefore[dependency] = append(currentSetupBefore, prerequisite)
+	return nil
 }
