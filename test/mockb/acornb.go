@@ -43,6 +43,11 @@ func (m *MockBImpl) SetupAcorn(registry auacornapi.AcornRegistry) error {
 }
 
 func (m *MockBImpl) TeardownAcorn(registry auacornapi.AcornRegistry) error {
+	err := registry.TeardownAfter(m.MockC.(auacornapi.Acorn))
+	if err != nil {
+		return err
+	}
+
 	rec.Add("b.TeardownAcorn")
 	return nil
 }

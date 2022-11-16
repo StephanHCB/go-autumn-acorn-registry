@@ -76,7 +76,7 @@ _Sometimes, the Acorn you'd want to add the SetupAfter() to will come from a lib
 In that case it may be easier to use `registry.AddSetupOrderRule(me, myDependency)` instead. 
 Note that you must do so in your `AssembleAcorn()`._
 
-It is a run time error to set up circular dependencies, and this is detected by the registry and
+It is a run time error to set up circular dependencies. This is detected by the registry and
 an error is raised.
 
 ### 4. teardown
@@ -88,6 +88,9 @@ If you need another component torn down first, there's a method `registry.Teardo
 which you can use to specify the teardown dependency tree. Just call it before proceeding with your
 own teardown. If the other Acorn has already been torn down, this call does nothing, but if it hasn't,
 it will recurse into its `TeardownAcorn()` method.
+
+It is a run time error to set up circular dependencies during teardown. This is detected by the registry and
+an error is raised.
 
 ## Usage
 
