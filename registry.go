@@ -89,7 +89,7 @@ func (a *AcornRegistryImpl) SkipAssemble(instance auacornapi.Acorn) {
 }
 
 func (a *AcornRegistryImpl) Assemble() error {
-	if a.phase != 1 {
+	if a.phase != phaseCreateDone {
 		return errors.New("wrong acorn registry phase order: Assemble() comes after Create()")
 	}
 	return a.lifecycleStep("assembly", phaseCreateDone, phaseAssembleDone, func(instance auacornapi.Acorn) error {
@@ -118,7 +118,7 @@ func (a *AcornRegistryImpl) injectExtraSetupAfterCallsThenSetup(instance auacorn
 }
 
 func (a *AcornRegistryImpl) Setup() error {
-	if a.phase != 2 {
+	if a.phase != phaseAssembleDone {
 		return errors.New("wrong acorn registry phase order: Setup() comes after Assemble()")
 	}
 	return a.lifecycleStep("setup", phaseAssembleDone, phaseSetupDone, func(instance auacornapi.Acorn) error {
@@ -145,7 +145,7 @@ func (a *AcornRegistryImpl) GetAcornByName(acornName string) auacornapi.Acorn {
 }
 
 func (a *AcornRegistryImpl) SetupAfter(otherAcorn auacornapi.Acorn) error {
-	if a.phase != 2 {
+	if a.phase != phaseAssembleDone {
 		return errors.New("wrong acorn registry phase for call to SetupAfter() - only allowed during setup phase")
 	}
 	if a.phaseByInstance[otherAcorn] == phaseInRecursiveSetup {
@@ -180,8 +180,8 @@ func (a *AcornRegistryImpl) TeardownAfter(otherAcorn auacornapi.Acorn) error {
 }
 
 func (a *AcornRegistryImpl) AddSetupOrderRule(prerequisite auacornapi.Acorn, dependency auacornapi.Acorn) error {
-	if a.phase != 1 {
-		return errors.New("wrong acorn registry phase order: AddSetupOrderRule() should be called during assembly phase")
+	if a.phase != phaseCreateDone {
+		return errors.New("wrong acorn registry phase for call to AddSetupOrderRule() - only allowed during assembly phase")
 	}
 	if prerequisite == nil || dependency == nil {
 		return errors.New("cannot add setup order rule for nil acorns")
