@@ -72,7 +72,11 @@ If you need another component set up first, there's a method `registry.SetupAfte
 use to specify the dependency tree. Just call it before using the reference to the other Acorn. If it has already been
 set up, this call does nothing, but if it hasn't, it will recurse into its `SetupAcorn()` method.
 
-It is a run time error to set up circular dependencies in Setup(), and this is detected by the registry and
+_Sometimes, the Acorn you'd want to add the SetupAfter() to will come from a library which is not under your control. 
+In that case it may be easier to use `registry.AddSetupOrderRule(me, myDependency)` instead. 
+Note that you must do so in your `AssembleAcorn()`._
+
+It is a run time error to set up circular dependencies, and this is detected by the registry and
 an error is raised.
 
 ### 4. teardown
