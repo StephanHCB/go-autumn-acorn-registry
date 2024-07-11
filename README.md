@@ -1,24 +1,13 @@
 # go-autumn-acorn-registry
 
-A registry for singleton components that comprise an application. Also helps you manage dependencies
-between the components.
+A registry for singleton components that comprise an application. 
 
-## About go-autumn
-
-A collection of libraries for [enterprise microservices](https://github.com/StephanHCB/go-mailer-service/blob/master/README.md) in golang that
-- is heavily inspired by Spring Boot / Spring Cloud
-- is very opinionated
-- names modules by what they do
-- unlike Spring Boot avoids certain types of auto-magical behaviour
-- is not a library monolith, that is every part only depends on the api parts of the other components
-  at most, and the api parts do not add any dependencies.  
-
-Fall is my favourite season, so I'm calling it go-autumn.
+Also helps you manage dependencies between the components.
 
 ## About go-autumn-acorn-registry
 
 One of the most flexible ways to assemble an application is building it out of singleton instances that
-implement an interface. You create them at program startup. Because this is go-autumn, let's call them **Acorn**s. 
+implement an interface. You create them at program startup. Because this is go-autumn, let's call them _Acorns_. 
 
 The various instances that build your application keep references to each other, only referring to their respective 
 interfaces. This allows easy mocking and switching between multiple implementations.
